@@ -14,42 +14,40 @@ class User(db.Model):
   password = db.Column(db.String(120), nullable=False)
   #creates a relationship field to get the user's todos
   todos = db.relationship('Todo', backref='user', lazy=True, cascade="all, delete-orphan")
-
   def __init__(self, username, email, password):
     self.username = username
     self.email = email
-    self.set_password(password)
+    self.set_password(password)    
 
   def set_password(self, password):
     """Create hashed password."""
     self.password = generate_password_hash(password, method='scrypt')
-
-def add_todo_category(self,todo_id,category):
-  my_todo= self.todos.filter_by(user_id=self.id)
-  matching_todo=None
-  for todo in self.todos:
-    if todo.id==todo.id:
-      matching_todo=todo_id
-    if matching_todo is None:
-        print("No matching todo found")
-      return
-  matching_category = None
-  for cat in self.categories:
-      if cat.text == category:
-        matching_category = cat
-      if not matching_category:
-        matching_category = Category(self.id, category)
-          db.session.add(matching_category)
-        db.session.commit()
-  print(matching_todo)
-
-  matching_category.todos.append(matching_todo)
-  db.session.add(matching_category)
-  db.session.commit()
-    return true
     
   def __repr__(self):
-    return f'<User {self.id} {self.username} - {self.email}>'
+      return f'<User {self.id} {self.username} - {self.email}>'
+  def add_todo_category(self, todo_id, category_text):
+    # Fetch the todo by id
+    todo = Todo.query.filter_by(id=todo_id, user_id=self.id).first()
+    # Make sure the todo exists and belongs to the current user
+    if not todo:
+        return False
+
+    # Check if category already exists for current user
+    category = Category.query.filter_by(text=category_text, user_id=self.id).first()
+    if not category:
+        # Create new category
+        category = Category(user_id=self.id, text=category_text)
+        db.session.add(category)
+        db.session.commit()
+
+    # Associate todo with the category if not already associated
+    if category not in todo.categories:
+        todo.categories.append(category)
+        db.session.add(todo)
+        db.session.commit()
+
+    return True
+    
 
 
 class Todo(db.Model):
@@ -66,9 +64,10 @@ class Todo(db.Model):
   def __init__(self, text):
       self.text = text
 
-def __repr__(self):
-  category_names = ', '.join([category.text for category in self.categories])
-  return f'<Todo: {self.id} | {self.user.username} | {self.text} | { "done" if self.done else "not done" } | categories [{category_names}]>' 
+  def __repr__(self):
+    category_names = ', '.join([category.text for category in self.categories])
+    return f'<Todo: {self.id} | {self.user.username} | {self.text} | { "done" if self.done else "not done" } | categories [{category_names}]>' 
+
 
 
 class TodoCategory(db.Model):

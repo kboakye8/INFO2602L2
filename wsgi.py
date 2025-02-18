@@ -5,17 +5,16 @@ from sqlalchemy.exc import IntegrityError
 
 
 @app.cli.command("init", help="Creates and initializes the database")
-  @app.cli.command("init", help="Creates and initializes the database")
-  def initialize():
-    db.drop_all()
-    db.init_app(app)
-    db.create_all()
-    bob = User('bob', 'bob@mail.com', 'bobpass')
-    bob.todos.append(Todo('wash car'))
-    db.session.add(bob)
-    db.session.commit()
-    print(bob)
-    print('database intialized')
+def initialize():
+  db.drop_all()
+  db.init_app(app)
+  db.create_all()
+  bob = User('bob', 'bob@mail.com', 'bobpass')
+  bob.todos.append(Todo('wash car'))
+  db.session.add(bob)
+  db.session.commit()
+  print(bob)
+  print('database intialized')
 
 
 
@@ -96,6 +95,7 @@ def add_task(username, text):
   bob.todos.append(new_todo)
   db.session.add(bob)
   db.session.commit()
+  print("Todo added!")
 
 @click.argument('todo_id', default=1)
 @click.argument('username', default='bob')
