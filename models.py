@@ -7,91 +7,56 @@ from app import app
 db = SQLAlchemy(app)
 
 
-class User(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  username = db.Column(db.String(80), unique=True, nullable=False)
-  email = db.Column(db.String(120), unique=True, nullable=False)
-  password = db.Column(db.String(120), nullable=False)
-  #creates a relationship field to get the user's todos
-  todos = db.relationship('Todo', backref='user', lazy=True, cascade="all, delete-orphan")
+class Graduate(db.Model):
+  id= db.Column(db.Integer, primary_key=True)
+  firstname= db.Column(db.String(80), nullable=False)
+  lastname=db.Column(db.String(80),nullable=False)
+  email= db.Column(db.String(120), unique=True, nullable=False)
+  password= db.Column(db.String(120), nullable=False)
+  
+  def __init__(self,firstname,last,email,password):
+    self.firstname=firstname
+    self.lastname=lastname
+    self.email=email
+    self.password=generate_password_hash(password)
 
-  def __init__(self, username, email, password):
-    self.username = username
-    self.email = email
-    self.set_password(password)
+class Employer(db.Model):
+  id= db.Column(db.Integer, primary_key=True)
+  name= db.Column(db.String(80), nullable=False)
+  email= db.Column(db.String(120), unique=True, nullable=False)
+  password= db.Column(db.String(120), nullable=False)
 
-  def set_password(self, password):
-    """Create hashed password."""
-    self.password = generate_password_hash(password, method='scrypt')
+  def __init__(self,name,email,password):
+    self.name=name
+    self.email=email
+    self.password=generate_password_hash(password)
 
-def add_todo_category(self,todo_id,category):
-  my_todo= self.todos.filter_by(user_id=self.id)
-  matching_todo=None
-  for todo in self.todos:
-    if todo.id==todo.id:
-      matching_todo=todo_id
-    if matching_todo is None:
-        print("No matching todo found")
-      return
-  matching_category = None
-  for cat in self.categories:
-      if cat.text == category:
-        matching_category = cat
-      if not matching_category:
-        matching_category = Category(self.id, category)
-          db.session.add(matching_category)
-        db.session.commit()
-  print(matching_todo)
+class Job(db.Model):
+  id= db.Column(db.Integer, primary_key=True)
+  title= db.Column(db.String(80), nullable=False)
+  description= db.Column(db.String(120), unique=True, nullable=False)
+  salary = db.Column(db.Integer, nullable=False)
+  employer_id = db.Column(db.Integer, db.ForeignKey('employer.id'), nullable=False)
+  employer= db.relationship('Employer', backref=db.backref('jobs', lazy=True))
+  type=db.Column(db.String(80),nullable=False, default='full-time')
 
-  matching_category.todos.append(matching_todo)
-  db.session.add(matching_category)
-  db.session.commit()
-    return true
-    
-  def __repr__(self):
-    return f'<User {self.id} {self.username} - {self.email}>'
+  def __init__(self,title,description,salary,employer_id,type):
+    self.title=title
+    self.description=description
+    self.salary=salary
+    self.employer_id=employer_id
+    self.type=type
 
+class Application(db.Model):
+  id= db.Column(db.Integer, primary_key=True)
+  job_id=db.Column(db.Integer,db.ForeignKey('job.id'), nullable=False)
+  graduate_id= db.Column(db.Integer,db.ForeignKey('graduate.id'), nullable=False)
+  status=db.Column(db.String(80), nullable=False, default='pending')  
+  job= db.relationship('Job', backref=db.backref('applications',lazy=True))
+  graduate= db.relationship('Graduate', backref=db.backref('applications',lazy=True))
+  applicants=db.relationship('Applicant',secondary="applicants", backref=db.backref('job'))
 
-class Todo(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) #set userid as a foreign key to user.id 
-  text = db.Column(db.String(255), nullable=False)
-  done = db.Column(db.Boolean, default=False)
-
-  def toggle(self):
-    self.done = not self.done
-    db.session.add(self)
-    db.session.commit()
-
-  def __init__(self, text):
-      self.text = text
-
-def __repr__(self):
-  category_names = ', '.join([category.text for category in self.categories])
-  return f'<Todo: {self.id} | {self.user.username} | {self.text} | { "done" if self.done else "not done" } | categories [{category_names}]>' 
-
-
-class TodoCategory(db.Model):
-  __tablename__ ='todo_category'
-  id = db.Column(db.Integer, primary_key=True)
-  todo_id = db.Column(db.Integer, db.ForeignKey('todo.id'), nullable=False)
-  category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
-  last_modified = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-
-  def __repr__(self):
-    return f'<TodoCategory last modified {self.last_modified.strftime("%Y/%m/%d, %H:%M:%S")}>'
-
-
-class Category(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-  text = db.Column(db.String(255), nullable=False)
-  user = db.relationship('User', backref=db.backref('categories', lazy='joined'))
-  todos = db.relationship('Todo', secondary='todo_category', backref=db.backref('categories', lazy=True))
-
-  def __init__(self, user_id, text):
-    self.user_id = user_id
-    self.text = text
-
-  def __repr__(self):
-    return f'<Category user:{self.user.username} - {self.text}>'
+  def __init__(self,job_id,graduate_id,status):
+    self.job_id=job_id
+    self.graduate_id=graduate_id
+    self_status=status
